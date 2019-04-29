@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <script src="http://colorbrewer2.org/export/colorbrewer.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<style>
+    .area:hover {
+        fill: whitesmoke;
+    }
+
+    #states {
+        /* fill: #aaa; */
+    }
+
+    .background {
+        fill: none;
+        pointer-events: all;
+    }
+
+    #states.active {
+        fill: orange;
+    }
+
+    #state-borders {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 1.5px;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        pointer-events: none;
+    }
+</style>
+
+<body>
+
+    <div id="map" style=" float : left;  background-color: black">
+        <!-- min-width:320px;width :50%;height : 50%; -->
+    </div>
+
+    <script>
+        var width = 960,
+            height = 900,
+            centered;
+
+        // var color = d3.scale.ordinal()
+        //     .domain([1, 2, 3, 4, 5, 6, 7, 8, 9])
+        //     .range(colorbrewer.Oranges[9]);
+
+        var projection = d3.geo.mercator()
+            .scale(1100)
+            .translate([-1100, 800]);
+
+        var path = d3.geo.path()
+            .projection(projection);
+
+
+
+        var svg = d3.select("#map").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        svg.append("rect")
+            .attr("class", "background")
+            .attr("width", width)
+            .attr("height", height)
+            .on("click", clicked);
+
+        // var svg = d3.select("#map").append("svg")
+        //     .attr("viewBox", "0 0 900 800")
+        //     .attr("preserveAspectRatio", "xMidYMid meet");
+
+        var g = svg.append("g");
+
+        var data;
+        d3.json("test.json", function (error, swiss) {
+            if (error) throw error;
+
+            var cantons = topojson
+                .feature(swiss, swiss.objects.india)
+            // .on("click", clicked);
+
+            var group = g.selectAll("g")
+                .data(cantons.features)
+                .enter()
+                .append("g");
+
+            var colorsArr = [
+                "#007FFF", "#F5F5DC", "#FFBF00", "#9966CC", "#FBCEB1", "#7FFFD4", "#007FFF", "#F5F5DC",
+                "#40826D", "#0000FF", "#0095B6", "#8A2BE2", "#DE5D83", "#FFC0CB", "#8E4585", "#E30B5C",
+                "#CD7F32", "#964B00", "#800020", "#702963", "#960018", "#DE3163", "#007BA7", "#F7E7CE",
+                "#7FFF00", "#7B3F00", "#0047AB", "#7DF9FF", "#50C878", "#00FF3F", "#FFD700", "#808080",
+                "#00FF00", "#3FFF00", "#4B0082", "#FFFFF0", "#00A86B", "#29AB87", "#B57EDC", "#FFF700",
+                "#C8A2C8", "#BFFF00", "#FF00FF", "#FF00AF", "#800000", "#E0B0FF", "#000080", "#CC7722",
+                "#808000", "#FFA500", "#FF4500", "#DA70D6", "#FFE5B4", "#D1E231", "#CCCCFF", "#1C39BB"
+            ];
+
+            var i = 0;
+
+            var areas = group.append("path")
+                .attr("d", path)
+                .attr("id", "states")
+                .on("click", clicked);
+
+            g.append("path")
+                .datum(topojson.mesh(swiss, swiss.objects.india, function (a, b) { return a !== b; }))
+                .attr("id", "state-borders")
+                .attr("d", path);
+
+
+
+            console.log("areas");
+            console.log(areas);
+
+            $.each(areas[0], function (ind, ele) {
+                // console.log(ele.outerHTML);
+                $(ele).attr("fill", colorsArr[ind]);
+            });
+
+
+        });
+
+        function clicked(d) {
+            var x, y, k;
+
+            if (d && centered !== d) {
+                var centroid = path.centroid(d);
+                x = centroid[0];
+                y = centroid[1];
+                k = 4;
+                centered = d;
+            } else {
+                x = width / 2;
+                y = height / 2;
+                k = 1;
+                centered = null;
+            }
+
+            g.selectAll("path")
+                .classed("active", centered && function (d) { return d === centered; });
+
+            g.transition()
+                .duration(750)
+                .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+                .style("stroke-width", 1.5 / k + "px");
+        }
+    </script>

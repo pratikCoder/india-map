@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+  <script src="http://colorbrewer2.org/export/colorbrewer.js"></script>
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<style>
+  .area:hover {
+    fill: brown;
+  }
+</style>
+<body>
+  <div id="map" style="float : left; min-width:320px;width :50%;height : 900px; background-color: black">
+    <div id="subtitle"></div>
+  </div>
+  <script>
+    var width = 960,
+      height = 900;
+
+    var color = d3.scale.ordinal()
+      .domain([1, 2, 3, 4, 5, 6, 7, 8, 9])
+      .range(colorbrewer.Oranges[9]);
+
+    console.log("color==>" + color);
+
+    var projection = d3.geo.mercator().scale(1100).translate([-1000, 800]);
+    var path = d3.geo.path()
+      .projection(projection);
+
+    var svg = d3.select("#map").append("svg")
+      .attr("viewBox", "0 0 900 800")
+      .attr("preserveAspectRatio", "xMidYMid meet");
+
+    var data;
+    d3.json("test.json", function (error, swiss) {
+      if (error) throw error;
+
+      var cantons = topojson.feature(swiss, swiss.objects.india);
+
+      var group = svg.selectAll("g")
+        .data(cantons.features)
+        .enter()
+        .append("g");
+
+      var colorsArr = ["#007FFF", "#F5F5DC", "#FFBF00", "#9966CC", "#FBCEB1", "#7FFFD4", "#007FFF", "#F5F5DC",
+        "#40826D", "#0000FF", "#0095B6", "#8A2BE2", "#DE5D83", "#FFC0CB", "#8E4585", "#E30B5C",
+        "#CD7F32", "#964B00", "#800020", "#702963", "#960018", "#DE3163", "#007BA7", "#F7E7CE",
+        "#7FFF00", "#7B3F00", "#0047AB", "#7DF9FF", "#50C878", "#00FF3F", "#FFD700", "#808080",
+        "#00FF00", "#3FFF00", "#4B0082", "#FFFFF0", "#00A86B", "#29AB87", "#B57EDC", "#FFF700",
+        "#C8A2C8", "#BFFF00", "#FF00FF", "#FF00AF", "#800000", "#E0B0FF", "#000080", "#CC7722",
+        "#808000", "#FFA500", "#FF4500", "#DA70D6", "#FFE5B4", "#D1E231", "#CCCCFF", "#1C39BB"
+      ];
+
+      var areas = group.append("path")
+        .attr("d", path)
+        .attr("class", "area")
+        .attr("fill", "steelblue");
+
+      $.each(areas[0], function (ind, ele) {
+        console.log(ele.outerHTML);
+        $(ele).attr("fill", colorsArr[ind]);
+      });
+    });
+  </script>
